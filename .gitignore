@@ -1,0 +1,7 @@
+.env
+reset_db.py
+migrations/
+__pycache__/
+venv/
+tests/
+create_admin.py

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Compléter la cotisation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Compléter la cotisation</h2>
+        <a href="{{ url_for('dues.view', due_id=due.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Informations de la cotisation</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted">Détails de la cotisation</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Membre</th>
+                            <td>
+                                {% if member %}
+                                    {{ member.first_name }} {{ member.last_name }}
+                                {% else %}
+                                    Non spécifié
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Type de cotisation</th>
+                            <td>
+                                {% if due_type %}
+                                    {{ due_type.name }}
+                                {% else %}
+                                    Non spécifié
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Montant total</th>
+                            <td>{{ due.total_amount }} FCFA</td>
+                        </tr>
+                        <tr>
+                            <th>Montant déjà payé</th>
+                            <td>{{ due.amount_paid }} FCFA</td>
+                        </tr>
+                        <tr>
+                            <th>Montant restant</th>
+                            <td>
+                                <span class="text-danger">{{ remaining_amount }} FCFA</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Dernier paiement</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Date de paiement</th>
+                            <td>{{ due.payment_date.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Méthode de paiement</th>
+                            <td>
+                                {% if due.payment_method == 'cash' %}
+                                    Espèces
+                                {% elif due.payment_method == 'mobile_money' %}
+                                    Mobile Money
+                                {% elif due.payment_method == 'bank_transfer' %}
+                                    Virement bancaire
+                                {% elif due.payment_method == 'check' %}
+                                    Chèque
+                                {% else %}
+                                    {{ due.payment_method }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="total_amount" class="form-label">Montant total (FCFA)</label>
+                        <input type="number" class="form-control" id="total_amount" value="{{ due.total_amount }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="amount_paid" class="form-label">Montant déjà payé (FCFA)</label>
+                        <input type="number" class="form-control" id="amount_paid" value="{{ due.amount_paid }}" readonly>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="remaining_amount" class="form-label">Montant restant (FCFA)</label>
+                        <input type="number" class="form-control" id="remaining_amount" value="{{ remaining_amount }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_amount" class="form-label">Montant à compléter (FCFA)</label>
+                        <input type="number" class="form-control" id="payment_amount" name="payment_amount" 
+                               min="1" max="{{ remaining_amount }}" value="{{ remaining_amount }}" required>
+                        <div class="form-text">Entrez un montant entre 1 et {{ remaining_amount }} FCFA.</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_date" class="form-label">Date de versement</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date" 
+                               value="{{ today }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_method" class="form-label">Méthode de paiement</label>
+                        <select class="form-select" id="payment_method" name="payment_method" required>
+                            <option value="cash">Espèces</option>
+                            <option value="mobile_money">Mobile Money</option>
+                            <option value="bank_transfer">Virement bancaire</option>
+                            <option value="check">Chèque</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span id="payment_status" class="badge bg-success d-none"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Compléter le paiement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentAmountInput = document.getElementById('payment_amount');
+    const remainingAmountInput = document.getElementById('remaining_amount');
+    const paymentStatus = document.getElementById('payment_status');
+    
+    // Mettre à jour le statut de paiement lorsque le montant change
+    paymentAmountInput.addEventListener('input', function() {
+        const paymentAmount = parseFloat(this.value) || 0;
+        const remainingAmount = parseFloat(remainingAmountInput.value) || 0;
+        
+        if (paymentAmount === remainingAmount) {
+            paymentStatus.textContent = 'Ce paiement soldera la cotisation';
+            paymentStatus.classList.remove('d-none', 'bg-warning');
+            paymentStatus.classList.add('bg-success');
+        } else if (paymentAmount > 0 && paymentAmount < remainingAmount) {
+            paymentStatus.textContent = 'Paiement partiel';
+            paymentStatus.classList.remove('d-none', 'bg-success');
+            paymentStatus.classList.add('bg-warning');
+        } else {
+            paymentStatus.classList.add('d-none');
+        }
+    });
+    
+    // Déclencher l'événement input au chargement
+    paymentAmountInput.dispatchEvent(new Event('input'));
+});
+</script>
+{% endblock %}

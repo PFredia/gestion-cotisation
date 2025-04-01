@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Administration - Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Tableau de bord d'administration</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Statistiques</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Membres totaux:</span>
+                        <span class="badge bg-primary rounded-pill">{{ stats.total_members }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Utilisateurs:</span>
+                        <span class="badge bg-success rounded-pill">{{ stats.total_users }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Types de cotisations:</span>
+                        <span class="badge bg-info rounded-pill">{{ stats.due_types }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Cotisations totales:</span>
+                        <span class="badge bg-warning rounded-pill">{{ stats.total_dues }} FCFA</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('users.add') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus"></i> Ajouter un utilisateur
+                        </a>
+                        <a href="{{ url_for('members.add') }}" class="btn btn-outline-success">
+                            <i class="fas fa-users"></i> Ajouter un membre
+                        </a>
+                        <a href="{{ url_for('dues.add') }}" class="btn btn-outline-info">
+                            <i class="fas fa-money-bill"></i> Enregistrer une cotisation
+                        </a>
+                        <a href="{{ url_for('dues.types') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-list"></i> Gérer les types de cotisations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Dernières cotisations</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_dues %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Membre</th>
+                                    <th>Type</th>
+                                    <th>Montant</th>
+                                    <th>Enregistré par</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for due in recent_dues %}
+                                <tr>
+                                    <td>{{ due.payment_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if due.member_id %}
+                                            {% set member = member_dict.get(due.member_id) %}
+                                            {% if member %}
+                                                {{ member.first_name }} {{ member.last_name }}
+                                            {% else %}
+                                                ID: {{ due.member_id }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if due.due_type_id %}
+                                            {% set due_type = due_type_dict.get(due.due_type_id) %}
+                                            {% if due_type %}
+                                                {{ due_type.name }}
+                                            {% else %}
+                                                ID: {{ due.due_type_id }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ due.amount_paid }} FCFA</td>
+                                    <td>
+                                        {% if due.recorded_by %}
+                                            {% set user = user_dict.get(due.recorded_by) %}
+                                            {% if user %}
+                                                {{ user.username }}
+                                            {% else %}
+                                                ID: {{ due.recorded_by }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">Aucune cotisation récente.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-end">
+                    <a href="{{ url_for('dues.index') }}" class="btn btn-sm btn-info">Voir toutes les cotisations</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Nouveaux membres</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_members %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Date d'inscription</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in recent_members %}
+                                <tr>
+                                    <td>{{ member.first_name }} {{ member.last_name }}</td>
+                                    <td>{{ member.email }}</td>
+                                    <td>{{ member.phone }}</td>
+                                    <td>{{ member.user.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('members.details', member_id=member.id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">Aucun nouveau membre.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-end">
+                    <a href="{{ url_for('members.index') }}" class="btn btn-sm btn-warning">Voir tous les membres</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

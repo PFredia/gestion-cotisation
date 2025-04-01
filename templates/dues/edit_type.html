@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier le type de cotisation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Modifier le type de cotisation</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ due_type.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Montant suggéré</label>
+                            <input type="number" class="form-control" id="amount" name="amount" value="{{ due_type.suggested_amount }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="frequency" class="form-label">Fréquence</label>
+                            <select class="form-select" id="frequency" name="frequency">
+                                <option value="monthly" {% if due_type.frequency == 'monthly' %}selected{% endif %}>Mensuelle</option>
+                                <option value="quarterly" {% if due_type.frequency == 'quarterly' %}selected{% endif %}>Trimestrielle</option>
+                                <option value="yearly" {% if due_type.frequency == 'yearly' %}selected{% endif %}>Annuelle</option>
+                                <option value="one-time" {% if due_type.frequency == 'one-time' %}selected{% endif %}>Unique</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ due_type.description }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('dues.types') }}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

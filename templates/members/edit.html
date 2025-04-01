@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier un membre{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Modifier le membre</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('members.edit', member_id=member.id) }}">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ member.first_name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ member.last_name }}" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Ajout du rôle dans l'église -->
+                        <div class="mb-3">
+                            <label for="church_role" class="form-label">Rôle dans l'église</label>
+                            <select class="form-select" id="church_role" name="church_role">
+                                <option value="">-- Sélectionner un rôle --</option>
+                                <option value="member" {% if member.church_role == 'member' %}selected{% endif %}>Membre</option>
+                                <option value="deacon" {% if member.church_role == 'deacon' %}selected{% endif %}>Diacre</option>
+                                <option value="elder" {% if member.church_role == 'elder' %}selected{% endif %}>Ancien</option>
+                                <option value="pastor" {% if member.church_role == 'pastor' %}selected{% endif %}>Pasteur</option>
+                                <option value="worship" {% if member.church_role == 'worship' %}selected{% endif %}>Louange</option>
+                                <option value="teacher" {% if member.church_role == 'teacher' %}selected{% endif %}>Enseignant</option>
+                                <option value="other" {% if member.church_role == 'other' %}selected{% endif %}>Autre</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Ajout du statut de baptême -->
+                        <div class="mb-3">
+                            <label for="baptism_status" class="form-label">Statut de baptême</label>
+                            <select class="form-select" id="baptism_status" name="baptism_status">
+                                <option value="not_baptized" {% if member.baptism_status == 'not_baptized' %}selected{% endif %}>Non baptisé</option>
+                                <option value="baptized" {% if member.baptism_status == 'baptized' %}selected{% endif %}>Baptisé</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ member.email or '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ member.phone or '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Adresse</label>
+                            <textarea class="form-control" id="address" name="address" rows="2">{{ member.address or '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="date_of_birth" class="form-label">Date de naissance</label>
+                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
+                                value="{{ member.date_of_birth.strftime('%Y-%m-%d') if member.date_of_birth else '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Genre</label>
+                            <select class="form-select" id="gender" name="gender">
+                                <option value="M" {% if member.gender == 'M' %}selected{% endif %}>Masculin</option>
+                                <option value="F" {% if member.gender == 'F' %}selected{% endif %}>Féminin</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="profession" class="form-label">Profession</label>
+                            <input type="text" class="form-control" id="profession" name="profession" value="{{ member.profession or '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="join_date" class="form-label">Date d'adhésion</label>
+                            <input type="date" class="form-control" id="join_date" name="join_date" 
+                                value="{{ member.join_date.strftime('%Y-%m-%d') if member.join_date else '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3">{{ member.notes or '' }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('members.details', member_id=member.id) }}" class="btn btn-secondary me-md-2">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails de la cotisation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Détails de la cotisation</h2>
+        <div>
+            {% if current_user.role != 'treasurer' %}
+            <a href="{{ url_for('dues.edit', due_id=due.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Modifier
+            </a>
+            {% endif %}
+            <a href="{{ url_for('dues.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Informations de la cotisation #{{ due.id }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-muted">Détails de base</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Membre</th>
+                            <td>
+                                {% if member %}
+                                    {{ member.first_name }} {{ member.last_name }}
+                                {% else %}
+                                    Non spécifié
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Type de cotisation</th>
+                            <td>
+                                {% if due_type %}
+                                    {{ due_type.name }}
+                                {% else %}
+                                    Non spécifié
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Montant suggéré</th>
+                            <td>
+                                {% if due_type %}
+                                    {{ due_type.suggested_amount or due_type.amount }} FCFA
+                                {% else %}
+                                    {{ due.total_amount }} FCFA
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Montant payé</th>
+                            <td>{{ due.amount_paid }} FCFA</td>
+                        </tr>
+                        <tr>
+                            <th>Montant restant</th>
+                            <td>
+                                {% set suggested_amount = due_type.suggested_amount or due_type.amount if due_type else due.total_amount %}
+                                {% set remaining = suggested_amount - due.amount_paid %}
+                                <span class="{% if remaining > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ remaining }} FCFA
+                                </span>
+                                {% if remaining <= 0 %}
+                                    <span class="badge bg-success">Soldé</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Paiement partiel</span>
+                                    <a href="{{ url_for('dues.complete_payment', due_id=due.id) }}" class="btn btn-sm btn-primary ms-2">
+                                        <i class="fas fa-check-circle"></i> Compléter la cotisation
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Informations de paiement</h6>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Date du dernier versement</th>
+                            <td>{{ due.payment_date.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Méthode de paiement</th>
+                            <td>
+                                {% if due.payment_method == 'cash' %}
+                                    Espèces
+                                {% elif due.payment_method == 'mobile_money' %}
+                                    Mobile Money
+                                {% elif due.payment_method == 'bank_transfer' %}
+                                    Virement bancaire
+                                {% elif due.payment_method == 'check' %}
+                                    Chèque
+                                {% else %}
+                                    {{ due.payment_method }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Enregistré par</th>
+                            <td>{{ recorder_name }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if due.notes %}
+            <div class="mt-4">
+                <h6 class="text-muted">Historique des transactions</h6>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%">Date</th>
+                                        <th style="width: 55%">Description</th>
+                                        <th style="width: 15%">Montant</th>
+                                        <th style="width: 15%">Méthode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set transactions = parse_transactions(due.notes) %}
+                                    {% for transaction in transactions %}
+                                    <tr class="{% if loop.index % 2 == 0 %}table-light{% endif %}">
+                                        <td>{% if transaction.date %}[{{ transaction.date }}]{% endif %}</td>
+                                        <td>{{ transaction.description }}</td>
+                                        <td>{{ transaction.amount }}</td>
+                                        <td>{{ transaction.payment_method }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-footer text-end">
+            {% if current_user.role != 'treasurer' %}
+            <a href="{{ url_for('dues.delete', due_id=due.id) }}" class="btn btn-danger" 
+               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette cotisation?')">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

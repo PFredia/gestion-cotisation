@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - Membre{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Tableau de bord - {{ member.first_name }} {{ member.last_name }}</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Mon profil</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informations personnelles</h6>
+                            <table class="table">
+                                <p><strong>Nom:</strong> {{ member.last_name }}</p>
+                                <p><strong>Prénom:</strong> {{ member.first_name }}</p>
+                                <p><strong>Email:</strong> {{ member.email }}</p>
+                                <p><strong>Téléphone:</strong> {{ member.phone }}</p>
+                                <p><strong>Adresse:</strong> {{ member.address }}</p>
+                                <p><strong>Date de naissance:</strong> {{ member.date_of_birth.strftime('%d/%m/%Y') if member.date_of_birth else 'Non renseigné' }}</p>
+                                <p><strong>Statut:</strong> {{ member.status }}</p>
+                                <p><strong>Rôle dans l'église:</strong> {{ member.church_role }}</p>
+                                <p><strong>Profession:</strong> {{ member.profession }}</p>
+                                <tr>
+                                    <th>Statut</th>
+                                    <td>
+                                        {% if member.status %}
+                                            <span class="badge bg-success">{{ member.status }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Non défini</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cotisations</h5>
+                </div>
+                <div class="card-body">
+                    {% if dues %}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for due in dues %}
+                            <tr>
+                                <td>{{ due.date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ due.due_type.name }}</td>
+                                <td>{{ due.amount }} FCFA</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p>Aucune cotisation enregistrée.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Administration - Types de Cotisations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Gestion des Types de Cotisations</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Ajouter un type de cotisation</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dues.add_type') }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Montant suggéré (FCFA)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="0">
+                            <small class="text-muted">Laissez vide si le montant est variable</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="frequency" class="form-label">Fréquence</label>
+                            <select class="form-select" id="frequency" name="frequency">
+                                <option value="once">Unique</option>
+                                <option value="weekly">Hebdomadaire</option>
+                                <option value="monthly">Mensuelle</option>
+                                <option value="quarterly">Trimestrielle</option>
+                                <option value="yearly">Annuelle</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Ajouter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Types de cotisations existants</h5>
+                </div>
+                <div class="card-body">
+                    {% if due_types %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Description</th>
+                                    <th>Montant suggéré</th>
+                                    <th>Fréquence</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for type in due_types %}
+                                <tr>
+                                    <td>{{ type.name }}</td>
+                                    <td>{{ type.description }}</td>
+                                    <td>{% if type.suggested_amount %}{{ type.suggested_amount }} FCFA{% else %}Variable{% endif %}</td>
+                                    <td>
+                                        {% if type.frequency == 'once' %}Unique
+                                        {% elif type.frequency == 'weekly' %}Hebdomadaire
+                                        {% elif type.frequency == 'monthly' %}Mensuelle
+                                        {% elif type.frequency == 'quarterly' %}Trimestrielle
+                                        {% elif type.frequency == 'yearly' %}Annuelle
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('dues.edit_type', type_id=type.id) }}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('dues.delete_type', type_id=type.id) }}" class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce type de cotisation?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">Aucun type de cotisation n'a été défini.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
