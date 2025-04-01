@@ -24,14 +24,17 @@
                 <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard.index') }}">Tableau de bord</a>
+                            <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('dashboard.index') }}">Tableau de bord</a>
                         </li>
                         {% if current_user.role == 'admin' or current_user.role == 'treasurer' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('members.index') }}">Membres</a>
+                                <a class="nav-link {% if request.path.startswith('/members') %}active{% endif %}" href="{{ url_for('members.index') }}">Membres</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('dues.index') }}">Cotisations</a>
+                                <a class="nav-link {% if request.path.startswith('/dues') %}active{% endif %}" href="{{ url_for('dues.index') }}">Cotisations</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path.startswith('/reports') %}active{% endif %}" href="{{ url_for('reports.index') }}">Rapports</a>
                             </li>
                         {% endif %}
                         {% if current_user.role == 'admin' %}

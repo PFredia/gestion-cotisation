@@ -52,12 +52,14 @@ def create_app():
     from controllers.members import members
     from controllers.dues import dues
     from controllers.users import users
+    from controllers.reports import reports  # Ajouter cette ligne
 
     app.register_blueprint(auth)
     app.register_blueprint(dashboard)
     app.register_blueprint(members)
     app.register_blueprint(dues)
     app.register_blueprint(users)
+    app.register_blueprint(reports)  # Ajouter cette ligne
 
     # Add favicon route to prevent 404 errors
     @app.route('/favicon.ico')

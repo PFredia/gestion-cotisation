@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapports Analytiques{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Rapports Analytiques</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total des Cotisations</h5>
+                    <h2 class="card-text">{{ total_dues }} FCFA</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Nombre de Membres</h5>
+                    <h2 class="card-text">{{ total_members }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Moyenne par Membre</h5>
+                    <h2 class="card-text">{{ (total_dues / total_members)|round(2) if total_members else 0 }} FCFA</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cotisations par Mois ({{ current_year }})</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cotisations Récentes</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for due in recent_dues %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ due.member.first_name }} {{ due.member.last_name }}
+                            <span class="badge bg-primary rounded-pill">{{ due.amount }} FCFA</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Générer un Rapport</h5>
+                </div>
+                <div class="card-body">
+                    <form id="reportForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="reportType" class="form-label">Type de Rapport</label>
+                            <select id="reportType" class="form-select">
+                                <option value="monthly">Rapport Mensuel</option>
+                                <option value="member">Rapport par Membre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="reportYear" class="form-label">Année</label>
+                            <select id="reportYear" class="form-select">
+                                {% for year in range(current_year|int, current_year|int - 5, -1) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">Générer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Résultats du Rapport</h5>
+                </div>
+                <div class="card-body">
+                    <div id="reportResults">
+                        <p class="text-center">Sélectionnez un type de rapport et cliquez sur Générer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialiser le graphique mensuel
+    const ctx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ chart_data.labels|tojson|safe }}'),
+            datasets: [{
+                label: 'Cotisations (FCFA)',
+                data: JSON.parse('{{ chart_data.data|tojson|safe }}'),
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Gérer la génération de rapport
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const reportType = document.getElementById('reportType').value;
+        const reportYear = document.getElementById('reportYear').value;
+        
+        fetch(`/reports/generate?type=${reportType}&year=${reportYear}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('reportResults');
+                
+                if (reportType === 'monthly') {
+                    // Afficher les résultats mensuels
+                    let html = `
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Mois</th>
+                                    <th>Total (FCFA)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                                       'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+                    
+                    data.forEach(item => {
+                        const monthIndex = parseInt(item.month) - 1;
+                        html += `
+                            <tr>
+                                <td>${monthNames[monthIndex]}</td>
+                                <td>${item.total.toLocaleString()} FCFA</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                    
+                    resultsDiv.innerHTML = html;
+                    
+                } else if (reportType === 'member') {
+                    // Afficher les résultats par membre
+                    let html = `
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Membre</th>
+                                    <th>Total (FCFA)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.total.toLocaleString()} FCFA</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                    
+                    resultsDiv.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                document.getElementById('reportResults').innerHTML = 
+                    '<div class="alert alert-danger">Erreur lors de la génération du rapport</div>';
+            });
+    });
+</script>
+{% endblock %}
